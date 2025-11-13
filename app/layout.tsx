@@ -6,8 +6,8 @@ import { Toaster } from 'react-hot-toast'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Recipe Sharing App',
-  description: 'Share and manage your cooking recipes',
+  title: 'Book Management App',
+  description: 'Manage your book collection',
 }
 
 export default function RootLayout({

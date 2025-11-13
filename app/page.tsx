@@ -1,97 +1,61 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Recipe } from '@/lib/supabase'
-import { supabase } from '@/lib/supabase'
-import { signOut } from '@/lib/auth'
-import { User } from '@supabase/supabase-js'
+import { Book } from '@/lib/supabase'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 
 export default function Home() {
-  const [recipes, setRecipes] = useState<Recipe[]>([])
-  const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([])
+  const [books, setBooks] = useState<Book[]>([])
+  const [filteredBooks, setFilteredBooks] = useState<Book[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedTag, setSelectedTag] = useState('')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; title: string } | null>(null)
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<User | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    fetchRecipes()
-    checkUser()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
+    fetchBooks()
   }, [])
 
-  const checkUser = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-    } catch (error) {
-      console.error('Error checking user:', error)
-    }
-  }
-
-  const handleLogout = async () => {
-    try {
-      const result = await signOut()
-      if (result.success) {
-        toast.success('Đăng xuất thành công!')
-        setUser(null)
-        router.refresh()
-      } else {
-        throw new Error(result.error)
-      }
-    } catch (error: any) {
-      toast.error('Lỗi đăng xuất: ' + error.message)
-    }
-  }
-
   useEffect(() => {
-    filterAndSortRecipes()
-  }, [recipes, searchTerm, selectedTag, sortOrder])
+    filterAndSortBooks()
+  }, [books, searchTerm, selectedTag, sortOrder])
 
-  const fetchRecipes = async () => {
+  const fetchBooks = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/recipes')
+      const response = await fetch('/api/books')
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch recipes')
+        throw new Error(result.error || 'Failed to fetch books')
       }
 
-      setRecipes(result.recipes || [])
+      setBooks(result.books || [])
     } catch (error: any) {
-      toast.error('Error fetching recipes: ' + error.message)
+      toast.error('Error fetching books: ' + error.message)
     } finally {
       setLoading(false)
     }
   }
 
-  const filterAndSortRecipes = () => {
-    let filtered = [...recipes]
+  const filterAndSortBooks = () => {
+    let filtered = [...books]
 
-    // Filter by search term
+    // Filter by search term (title)
     if (searchTerm) {
-      filtered = filtered.filter(recipe =>
-        recipe.title.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(book =>
+        book.title.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
     // Filter by tag
     if (selectedTag) {
-      filtered = filtered.filter(recipe =>
-        recipe.tags && recipe.tags.includes(selectedTag)
+      filtered = filtered.filter(book =>
+        book.tags && book.tags.includes(selectedTag)
       )
     }
 
@@ -101,34 +65,34 @@ export default function Home() {
       return sortOrder === 'asc' ? comparison : -comparison
     })
 
-    setFilteredRecipes(filtered)
+    setFilteredBooks(filtered)
   }
 
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`/api/recipes/${id}`, {
+      const response = await fetch(`/api/books/${id}`, {
         method: 'DELETE',
       })
 
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to delete recipe')
+        throw new Error(result.error || 'Failed to delete book')
       }
 
-      toast.success('Recipe deleted successfully')
-      fetchRecipes()
+      toast.success('Book deleted successfully')
+      fetchBooks()
       setDeleteConfirm(null)
     } catch (error: any) {
-      toast.error('Error deleting recipe: ' + error.message)
+      toast.error('Error deleting book: ' + error.message)
     }
   }
 
   // Get all unique tags
   const allTags = Array.from(
     new Set(
-      recipes
-        .flatMap(recipe => recipe.tags || [])
+      books
+        .flatMap(book => book.tags || [])
         .filter(tag => tag && tag.trim() !== '')
     )
   ).sort()
@@ -137,8 +101,8 @@ export default function Home() {
     return (
       <div className="container">
         <div className="header">
-          <h1>Recipe Sharing App</h1>
-          <p>Loading recipes...</p>
+          <h1>Book Management</h1>
+          <p>Loading books...</p>
         </div>
       </div>
     )
@@ -147,33 +111,15 @@ export default function Home() {
   return (
     <div className="container">
       <div className="header">
-        <div className="header-top">
-          <div>
-            <h1>Recipe Sharing App</h1>
-            <p>Discover and manage your favorite recipes</p>
-          </div>
-          <div className="auth-section">
-            {user ? (
-              <div className="user-info">
-                <span className="user-email">{user.email}</span>
-                <button onClick={handleLogout} className="btn btn-secondary">
-                  Đăng xuất
-                </button>
-              </div>
-            ) : (
-              <Link href="/login" className="btn btn-secondary">
-                Đăng nhập
-              </Link>
-            )}
-          </div>
-        </div>
+        <h1>📚 Book Management</h1>
+        <p>Manage your book collection with ease</p>
       </div>
 
       <div className="controls">
         <div className="search-box">
           <input
             type="text"
-            placeholder="Search recipes by title..."
+            placeholder="Search books by title..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -199,61 +145,58 @@ export default function Home() {
           </select>
         </div>
         <Link href="/create" className="btn btn-primary">
-          + Create Recipe
+          ➕ Create Book
         </Link>
       </div>
 
-      {filteredRecipes.length === 0 ? (
-        <div className="no-recipes">
-          <h3>No recipes found</h3>
+      {filteredBooks.length === 0 ? (
+        <div className="no-books">
+          <h3>{books.length === 0 ? '📖 No books yet' : '🔍 No books found'}</h3>
           <p>
-            {recipes.length === 0
-              ? 'Get started by creating your first recipe!'
+            {books.length === 0
+              ? 'Get started by creating your first book!'
               : 'Try adjusting your search or filter criteria.'}
           </p>
         </div>
       ) : (
-        <div className="recipe-grid">
-          {filteredRecipes.map(recipe => (
-            <div key={recipe.id} className="recipe-card">
-              {recipe.image_url && (
+        <div className="book-grid">
+          {filteredBooks.map(book => (
+            <div key={book.id} className="book-card" onClick={() => router.push(`/edit/${book.id}`)}>
+              {book.cover_image && (
                 <img
-                  src={recipe.image_url}
-                  alt={recipe.title}
-                  className="recipe-image"
+                  src={book.cover_image}
+                  alt={book.title}
+                  className="book-image"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none'
                   }}
                 />
               )}
-              {!recipe.image_url && (
-                <div className="recipe-image">No Image</div>
+              {!book.cover_image && (
+                <div className="book-image">📚 No Cover Image</div>
               )}
-              <div className="recipe-content">
-                <h2 className="recipe-title">{recipe.title}</h2>
-                <p className="recipe-ingredients">
-                  {recipe.ingredients.split('\n').slice(0, 3).join(', ')}
-                  {recipe.ingredients.split('\n').length > 3 && '...'}
-                </p>
-                {recipe.tags && recipe.tags.length > 0 && (
-                  <div className="recipe-tags">
-                    {recipe.tags.map((tag, index) => (
+              <div className="book-content">
+                <h2 className="book-title">{book.title}</h2>
+                <p className="book-author">{book.author}</p>
+                {book.tags && book.tags.length > 0 && (
+                  <div className="book-tags">
+                    {book.tags.map((tag, index) => (
                       <span key={index} className="tag">{tag}</span>
                     ))}
                   </div>
                 )}
-                <div className="recipe-actions">
+                <div className="book-actions" onClick={(e) => e.stopPropagation()}>
                   <Link
-                    href={`/edit/${recipe.id}`}
+                    href={`/edit/${book.id}`}
                     className="btn btn-secondary"
                   >
-                    Edit
+                    ✏️ Edit
                   </Link>
                   <button
-                    onClick={() => setDeleteConfirm({ id:recipe.id, title: recipe.title })}
+                    onClick={() => setDeleteConfirm({ id: book.id, title: book.title })}
                     className="btn btn-danger"
                   >
-                    Delete
+                    🗑️ Delete
                   </button>
                 </div>
               </div>
@@ -268,9 +211,11 @@ export default function Home() {
             className="confirm-dialog-content"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3>Confirm Delete</h3>
+            <h3>⚠️ Confirm Delete</h3>
             <p>
-              Are you sure you want to delete &quot;{deleteConfirm.title}&quot;? This action cannot be undone.
+              Are you sure you want to delete <strong>&quot;{deleteConfirm.title}&quot;</strong>? 
+              <br />
+              This action cannot be undone.
             </p>
             <div className="confirm-dialog-actions">
               <button
@@ -292,4 +237,3 @@ export default function Home() {
     </div>
   )
 }
-

@@ -61,12 +61,12 @@ const supabase = getSupabaseClient()
 
 export { supabase }
 
-export type Recipe = {
+export type Book = {
   id: string
   title: string
-  ingredients: string
+  author: string
   tags: string[] | null
-  image_url: string | null
+  cover_image: string | null
   created_at: string
   updated_at: string
 }

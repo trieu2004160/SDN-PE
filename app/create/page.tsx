@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 
-export default function CreateRecipe() {
+export default function CreateBook() {
   const router = useRouter()
   const [title, setTitle] = useState('')
-  const [ingredients, setIngredients] = useState('')
+  const [author, setAuthor] = useState('')
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
-  const [imageUrl, setImageUrl] = useState('')
+  const [coverImage, setCoverImage] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleAddTag = () => {
@@ -34,37 +34,37 @@ export default function CreateRecipe() {
       return
     }
 
-    if (!ingredients.trim()) {
-      toast.error('Ingredients is required')
+    if (!author.trim()) {
+      toast.error('Author is required')
       return
     }
 
     try {
       setLoading(true)
 
-      const response = await fetch('/api/recipes', {
+      const response = await fetch('/api/books', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           title: title.trim(),
-          ingredients: ingredients.trim(),
+          author: author.trim(),
           tags: tags.length > 0 ? tags : null,
-          image_url: imageUrl.trim() || null,
+          cover_image: coverImage.trim() || null,
         }),
       })
 
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to create recipe')
+        throw new Error(result.error || 'Failed to create book')
       }
 
-      toast.success('Recipe created successfully!')
+      toast.success('Book created successfully!')
       router.push('/')
     } catch (error: any) {
-      toast.error('Error creating recipe: ' + error.message)
+      toast.error('Error creating book: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -73,7 +73,8 @@ export default function CreateRecipe() {
   return (
     <div className="container">
       <div className="header">
-        <h1>Create New Recipe</h1>
+        <h1>➕ Create New Book</h1>
+        <p>Add a new book to your collection</p>
       </div>
 
       <form onSubmit={handleSubmit} className="form-container">
@@ -86,23 +87,23 @@ export default function CreateRecipe() {
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter recipe title"
+            placeholder="Enter book title"
             required
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="ingredients">
-            Ingredients <span style={{ color: 'red' }}>*</span>
+          <label htmlFor="author">
+            Author <span style={{ color: 'red' }}>*</span>
           </label>
-          <textarea
-            id="ingredients"
-            value={ingredients}
-            onChange={(e) => setIngredients(e.target.value)}
-            placeholder="Enter ingredients (one per line or comma-separated)"
+          <input
+            type="text"
+            id="author"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            placeholder="Enter author name"
             required
           />
-          <small>You can list ingredients one per line or separated by commas</small>
         </div>
 
         <div className="form-group">
@@ -145,22 +146,22 @@ export default function CreateRecipe() {
               ))}
             </div>
           )}
-          <small>Examples: Vegan, Dessert, Quick, Breakfast, etc.</small>
+          <small>Examples: IT, Programming, Fiction, etc.</small>
         </div>
 
         <div className="form-group">
-          <label htmlFor="imageUrl">Image URL (Optional)</label>
+          <label htmlFor="coverImage">Cover Image (Optional)</label>
           <input
             type="url"
-            id="imageUrl"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://example.com/image.jpg"
+            id="coverImage"
+            value={coverImage}
+            onChange={(e) => setCoverImage(e.target.value)}
+            placeholder="https://example.com/cover.jpg"
           />
-          <small>Enter a URL to an image for this recipe</small>
-          {imageUrl && (
+          <small>Enter a URL to a cover image for this book</small>
+          {coverImage && (
             <div className="image-preview">
-              <img src={imageUrl} alt="Preview" onError={(e) => {
+              <img src={coverImage} alt="Preview" onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none'
               }} />
             </div>
@@ -169,14 +170,13 @@ export default function CreateRecipe() {
 
         <div className="form-actions">
           <Link href="/" className="btn btn-secondary">
-            Cancel
+            ← Cancel
           </Link>
           <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Creating...' : 'Create Recipe'}
+            {loading ? '⏳ Creating...' : '✅ Create Book'}
           </button>
         </div>
       </form>
     </div>
   )
 }
-

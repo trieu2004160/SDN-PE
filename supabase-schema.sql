@@ -1,35 +1,37 @@
--- Create recipes table in Supabase
--- Run this SQL in your Supabase SQL Editor
+-- Create books table in Supabase
+-- Run this SQL in your Supabase SQL Editor (Dashboard > SQL Editor > New Query)
+-- Copy and paste the entire content below, then click "Run"
 
-CREATE TABLE IF NOT EXISTS recipes (
+-- Drop table if it exists (optional - only use if you want to start fresh)
+-- DROP TABLE IF EXISTS books CASCADE;
+
+-- Create books table
+CREATE TABLE IF NOT EXISTS books (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   title TEXT NOT NULL,
-  ingredients TEXT NOT NULL,
+  author TEXT NOT NULL,
   tags TEXT[],
-  image_url TEXT,
+  cover_image TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create an index on title for faster searches
-CREATE INDEX IF NOT EXISTS idx_recipes_title ON recipes(title);
+-- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_books_title ON books(title);
+CREATE INDEX IF NOT EXISTS idx_books_author ON books(author);
+CREATE INDEX IF NOT EXISTS idx_books_tags ON books USING GIN(tags);
 
--- Create an index on tags for faster filtering
-CREATE INDEX IF NOT EXISTS idx_recipes_tags ON recipes USING GIN(tags);
+-- Enable Row Level Security (RLS)
+ALTER TABLE books ENABLE ROW LEVEL SECURITY;
 
--- Enable Row Level Security (RLS) - optional, adjust based on your needs
--- For a public app, you might want to allow all operations
-ALTER TABLE recipes ENABLE ROW LEVEL SECURITY;
+-- Drop existing policy if it exists (to avoid conflicts)
+DROP POLICY IF EXISTS "Allow all operations on books" ON books;
 
--- Allow all operations for all users (adjust as needed for your security requirements)
-CREATE POLICY "Allow all operations on recipes" ON recipes
+-- Create policy to allow all operations for all users
+CREATE POLICY "Allow all operations on books" ON books
   FOR ALL
   USING (true)
   WITH CHECK (true);
 
--- Or if you want to make it read-only for unauthenticated users:
--- CREATE POLICY "Allow read access" ON recipes FOR SELECT USING (true);
--- CREATE POLICY "Allow insert access" ON recipes FOR INSERT WITH CHECK (true);
--- CREATE POLICY "Allow update access" ON recipes FOR UPDATE USING (true);
--- CREATE POLICY "Allow delete access" ON recipes FOR DELETE USING (true);
-
+-- Verify the table was created
+SELECT * FROM books LIMIT 1;
